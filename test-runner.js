@@ -1,13 +1,21 @@
 // Browser-compatible test runner - no Node.js dependencies
 export async function runTests(suite = 'all') {
-    const output = document.getElementById('testOutput');
+    const output = document.getElementById('testResults');
+    if (!output) {
+        console.error('Test results element not found');
+        return;
+    }
+    
     output.innerHTML = '<p>Running tests...</p>';
     
     try {
         const results = await runBrowserTests(suite);
         displayResults(results);
     } catch (error) {
-        output.innerHTML = `<p style="color: #f38ba8;">Error: ${error.message}</p>`;
+        const output = document.getElementById('testResults');
+        if (output) {
+            output.innerHTML = `<p style="color: #e74c3c;">Error: ${error.message}</p>`;
+        }
     }
 }
 
@@ -70,18 +78,28 @@ async function runBrowserTests(suite) {
                 toBeLessThan: (expected) => {
                     if (!(actual < expected)) throw new Error(`Expected ${actual} to be less than ${expected}`);
                 },
-                toThrow: () => {
+                toThrow: (message) => {
                     let threw = false;
+                    let errorMessage = '';
                     try {
                         actual();
                     } catch (e) {
                         threw = true;
+                        errorMessage = e.message;
                     }
                     if (!threw) throw new Error('Expected function to throw');
+                    if (message && !errorMessage.includes(message)) {
+                        throw new Error(`Expected error message to contain "${message}", got "${errorMessage}"`);
+                    }
                 },
                 toContain: (expected) => {
                     if (!Array.isArray(actual) || !actual.includes(expected)) {
                         throw new Error(`Expected array to contain ${expected}`);
+                    }
+                },
+                toEqual: (expected) => {
+                    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+                        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
                     }
                 },
                 not: {
@@ -91,6 +109,11 @@ async function runBrowserTests(suite) {
                     toContain: (expected) => {
                         if (Array.isArray(actual) && actual.includes(expected)) {
                             throw new Error(`Expected array not to contain ${expected}`);
+                        }
+                    },
+                    toEqual: (expected) => {
+                        if (JSON.stringify(actual) === JSON.stringify(expected)) {
+                            throw new Error(`Expected ${JSON.stringify(actual)} not to equal ${JSON.stringify(expected)}`);
                         }
                     }
                 }
@@ -130,9 +153,11 @@ async function runBrowserTests(suite) {
 }
 
 function displayResults(results) {
-    const output = document.getElementById('testOutput');
+    const output = document.getElementById('testResults');
     const coverageBar = document.getElementById('coverageBar');
     const coverageText = document.getElementById('coverageText');
+    
+    if (!output) return;
     
     if (!results || !results.testResults) {
         output.innerHTML = '<p>No test results available</p>';
@@ -168,9 +193,11 @@ function displayResults(results) {
     
     output.innerHTML = html || '<p>No tests found</p>';
     
-    const coveragePercent = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
-    coverageBar.style.width = `${coveragePercent}%`;
-    coverageText.textContent = `${coveragePercent}% Coverage (${passedTests}/${totalTests} tests)`;
+    if (coverageBar && coverageText) {
+        const coveragePercent = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
+        coverageBar.style.width = `${coveragePercent}%`;
+        coverageText.textContent = `${passedTests}/${totalTests} tests (${coveragePercent}%)`;
+    }
 }
 
 // Set up global test functions if they don't exist
