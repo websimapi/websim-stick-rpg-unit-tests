@@ -1,20 +1,17 @@
-import { runVitest } from 'vitest/node';
-
+// Browser-compatible test runner - no Node.js dependencies
 export async function runTests(suite = 'all') {
     const output = document.getElementById('testOutput');
     output.innerHTML = '<p>Running tests...</p>';
     
     try {
-        // Use dynamic import to run tests in browser
-        const testModules = await getTestModules(suite);
-        const results = await runBrowserTests(testModules);
+        const results = await runBrowserTests(suite);
         displayResults(results);
     } catch (error) {
         output.innerHTML = `<p style="color: #f38ba8;">Error: ${error.message}</p>`;
     }
 }
 
-async function getTestModules(suite) {
+async function runBrowserTests(suite) {
     const testFiles = {
         'all': ['character.test.js', 'combat.test.js', 'world.test.js', 'inventory.test.js', 'quest.test.js'],
         'character': ['character.test.js'],
@@ -25,76 +22,105 @@ async function getTestModules(suite) {
     };
     
     const files = testFiles[suite] || testFiles['all'];
-    const modules = [];
+    const results = { testResults: [] };
     
     for (const file of files) {
-        try {
-            const module = await import(`./${file}`);
-            modules.push({ name: file.replace('.test.js', ''), module });
-        } catch (error) {
-            console.error(`Failed to load ${file}:`, error);
-        }
-    }
-    
-    return modules;
-}
-
-async function runBrowserTests(testModules) {
-    const results = {
-        testResults: []
-    };
-    
-    for (const { name, module } of testModules) {
         const suiteResults = {
-            filepath: name,
+            filepath: file.replace('.test.js', ''),
             tests: []
         };
         
-        // Run each test suite's describe blocks
         try {
-            // This is a simplified browser test runner
-            // In a real scenario, you'd use a proper browser test framework
+            // Create mock testing environment
+            const testCases = [];
+            const mockDescribe = (description, fn) => {
+                try {
+                    const originalDescribe = window.describe;
+                    window.describe = mockDescribe;
+                    fn();
+                    window.describe = originalDescribe;
+                } catch (error) {
+                    console.error(`Failed to run describe block: ${error}`);
+                }
+            };
+            
+            const mockIt = (name, testFn) => {
+                try {
+                    testFn();
+                    suiteResults.tests.push({
+                        name,
+                        status: 'passed'
+                    });
+                } catch (error) {
+                    suiteResults.tests.push({
+                        name,
+                        status: 'failed',
+                        error: error.message
+                    });
+                }
+            };
+            
             const mockExpect = (actual) => ({
-                toBe: (expected) => actual === expected,
-                toBeGreaterThan: (expected) => actual > expected,
-                toBeLessThan: (expected) => actual < expected,
-                toThrow: () => false,
-                toContain: (expected) => Array.isArray(actual) && actual.includes(expected),
+                toBe: (expected) => {
+                    if (actual !== expected) throw new Error(`Expected ${expected}, got ${actual}`);
+                },
+                toBeGreaterThan: (expected) => {
+                    if (!(actual > expected)) throw new Error(`Expected ${actual} to be greater than ${expected}`);
+                },
+                toBeLessThan: (expected) => {
+                    if (!(actual < expected)) throw new Error(`Expected ${actual} to be less than ${expected}`);
+                },
+                toThrow: () => {
+                    let threw = false;
+                    try {
+                        actual();
+                    } catch (e) {
+                        threw = true;
+                    }
+                    if (!threw) throw new Error('Expected function to throw');
+                },
+                toContain: (expected) => {
+                    if (!Array.isArray(actual) || !actual.includes(expected)) {
+                        throw new Error(`Expected array to contain ${expected}`);
+                    }
+                },
                 not: {
-                    toBe: (expected) => actual !== expected,
-                    toContain: (expected) => !actual.includes(expected)
+                    toBe: (expected) => {
+                        if (actual === expected) throw new Error(`Expected ${actual} not to be ${expected}`);
+                    },
+                    toContain: (expected) => {
+                        if (Array.isArray(actual) && actual.includes(expected)) {
+                            throw new Error(`Expected array not to contain ${expected}`);
+                        }
+                    }
                 }
             });
             
-            // Mock vitest functions
-            const describe = (description, fn) => {
-                try {
-                    fn();
-                } catch (error) {
-                    console.error(`Failed to run ${description}:`, error);
-                }
-            };
+            // Set up global test functions
+            const originalDescribe = window.describe;
+            const originalIt = window.it;
+            const originalExpect = window.expect;
             
-            const it = (name, fn) => {
-                try {
-                    fn();
-                    suiteResults.tests.push({ name, status: 'passed' });
-                } catch (error) {
-                    suiteResults.tests.push({ name: 'Test execution failed', status: 'failed', error: error.message });
-                }
-            };
+            window.describe = mockDescribe;
+            window.it = mockIt;
+            window.expect = mockExpect;
             
-            // Run the test with mocked functions
-            await module.default({
-                describe,
-                it,
-                expect: mockExpect,
-                vi: { fn: () => () => {} }
-            });
+            // Import and run the test
+            try {
+                await import(`./${file}`);
+            } finally {
+                // Restore original functions
+                window.describe = originalDescribe;
+                window.it = originalIt;
+                window.expect = originalExpect;
+            }
             
         } catch (error) {
-            console.error(`Failed to run ${name}:`, error);
-            suiteResults.tests.push({ name: 'Test execution failed', status: 'failed', error: error.message });
+            suiteResults.tests.push({
+                name: 'Test file execution failed',
+                status: 'failed',
+                error: error.message
+            });
         }
         
         results.testResults.push(suiteResults);
@@ -145,4 +171,11 @@ function displayResults(results) {
     const coveragePercent = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
     coverageBar.style.width = `${coveragePercent}%`;
     coverageText.textContent = `${coveragePercent}% Coverage (${passedTests}/${totalTests} tests)`;
+}
+
+// Set up global test functions if they don't exist
+if (!window.describe) {
+    window.describe = () => {};
+    window.it = () => {};
+    window.expect = () => ({});
 }
