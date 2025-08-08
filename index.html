@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stick RPG Unit Tests</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1e1e2e, #2d2d42);
+            color: #cdd6f4;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #f38ba8, #cba6f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .test-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: #89b4fa;
+            color: #1e1e2e;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: #cba6f7;
+            transform: translateY(-2px);
+        }
+        
+        .test-results {
+            background: #181825;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .test-suite {
+            margin-bottom: 2rem;
+            border-left: 3px solid #f38ba8;
+            padding-left: 1rem;
+        }
+        
+        .test-suite h3 {
+            color: #89b4fa;
+            margin-bottom: 1rem;
+        }
+        
+        .test-case {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: #313244;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .test-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+        
+        .status-fail {
+            background: #f38ba8;
+            color: #181825;
+        }
+        
+        .status-pass {
+            background: #a6e3a1;
+            color: #181825;
+        }
+        
+        .status-pending {
+            background: #fab387;
+            color: #181825;
+        }
+        
+        .coverage-info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #313244;
+            border-radius: 8px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #313244;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f38ba8, #cba6f7);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Stick RPG Unit Test Dashboard</h1>
+        
+        <div class="test-controls">
+            <button onclick="runAllTests()">Run All Tests</button>
+            <button onclick="runCharacterTests()">Character Tests</button>
+            <button onclick="runCombatTests()">Combat Tests</button>
+            <button onclick="runWorldTests()">World Tests</button>
+            <button onclick="runInventoryTests()">Inventory Tests</button>
+            <button onclick="runQuestTests()">Quest Tests</button>
+        </div>
+        
+        <div class="test-results" id="testResults">
+            <div id="testOutput">Click 'Run All Tests' to begin...</div>
+        </div>
+        
+        <div class="coverage-info">
+            <h3>Test Coverage</h3>
+            <div class="progress-bar">
+                <div class="progress-fill" id="coverageBar"></div>
+            </div>
+            <p id="coverageText">0% Coverage (0/0 tests)</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { runTests } from './test-runner.js';
+        
+        window.runAllTests = () => runTests('all');
+        window.runCharacterTests = () => runTests('character');
+        window.runCombatTests = () => runTests('combat');
+        window.runWorldTests = () => runTests('world');
+        window.runInventoryTests = () => runTests('inventory');
+        window.runQuestTests = () => runTests('quest');
+    </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
+
