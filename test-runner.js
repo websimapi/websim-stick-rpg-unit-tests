@@ -21,12 +21,26 @@ export async function runTests(suite = 'all') {
 
 async function runBrowserTests(suite) {
     const testFiles = {
-        'all': ['character.test.js', 'combat.test.js', 'world.test.js', 'inventory.test.js', 'quest.test.js'],
+        'all': [
+            'character.test.js',
+            'combat.test.js', 
+            'world.test.js',
+            'inventory/inventory-core.test.js',
+            'inventory/inventory-stacking.test.js',
+            'inventory/inventory-equipment.test.js',
+            'quest/quest-core.test.js',
+            'quest/quest-advanced.test.js',
+            'quest/quest-manager.test.js'
+        ],
         'character': ['character.test.js'],
         'combat': ['combat.test.js'],
         'world': ['world.test.js'],
-        'inventory': ['inventory.test.js'],
-        'quest': ['quest.test.js']
+        'inventory-core': ['inventory/inventory-core.test.js'],
+        'inventory-stacking': ['inventory/inventory-stacking.test.js'],
+        'inventory-equipment': ['inventory/inventory-equipment.test.js'],
+        'quest-core': ['quest/quest-core.test.js'],
+        'quest-advanced': ['quest/quest-advanced.test.js'],
+        'quest-manager': ['quest/quest-manager.test.js']
     };
     
     const files = testFiles[suite] || testFiles['all'];
